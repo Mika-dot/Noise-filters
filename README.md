@@ -73,12 +73,6 @@ Median filtering is an efficient procedure for processing signals affected by im
 
 ![MedianFilter](https://github.com/Mika-dot/Noise-filters/blob/main/Filter%20in%20charts/MedianFilter.PNG)
 
-# Least square method
-
-The least squares method (LSM) is a mathematical method used to solve various problems, based on minimizing the sum of squared deviations of some functions from the desired variables. It can be used to "solve" overdetermined systems of equations (when the number of equations exceeds the number of unknowns), to find a solution in the case of ordinary (not overdetermined) nonlinear systems of equations, to approximate the point values ​​of some function. OLS is one of the basic methods of regression analysis for estimating unknown parameters of regression models from sample data.
-
-![LeastSquareMethod](https://github.com/Mika-dot/Noise-filters/blob/main/Filter%20in%20charts/LeastSquareMethod2.PNG)
-
 # Simple "Kalman"
 
 I found this algorithm on the Internet, I lost the source. In the filter, you can set the measurement spread (expected measurement noise), the estimate spread (it adjusts itself during the filter operation, you can set it to the same as the measurement spread), the rate of change of values (0.001-1, vary by yourself).
