@@ -1,0 +1,9 @@
+filter,rmse,error_reduction_percent,estimated_lag_samples
+Median,2.6191,75.76,0
+Moving average,3.6147,66.54,1
+Gaussian,4.2576,60.59,1
+EMA,4.5669,57.73,6
+Savitzky–Golay,5.3402,50.57,1
+Hampel,5.4528,49.53,0
+Kalman,5.8764,45.61,10
+One Euro,7.7025,28.70,4

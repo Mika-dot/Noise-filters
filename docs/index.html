@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Интерактивная лаборатория одномерных фильтров шума">
+  <title>Noise Filters — интерактивная лаборатория</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <a class="eyebrow" href="https://github.com/Mika-dot/Noise-filters">Mika-dot / Noise-filters</a>
+      <h1>Увидеть, как фильтр<br><span>меняет сигнал</span></h1>
+      <p>Меняйте шум, выбросы и параметры. График и метрики пересчитываются сразу — без библиотек и сервера.</p>
+    </div>
+    <div class="hero-badge"><strong>25+</strong><span>алгоритмов<br>в C#</span></div>
+  </header>
+
+  <main>
+    <section class="lab" aria-label="Лаборатория фильтров">
+      <aside class="controls">
+        <div class="control-group">
+          <h2>1. Сигнал</h2>
+          <label>Форма
+            <select id="signal">
+              <option value="mixed">Синус + ступень</option>
+              <option value="sine">Синус</option>
+              <option value="step">Ступень</option>
+              <option value="ramp">Линейный тренд</option>
+              <option value="pulse">Импульс</option>
+              <option value="triangle">Треугольник</option>
+            </select>
+          </label>
+          <label><span>Случайный шум <output id="noiseOut">18</output></span><input id="noise" type="range" min="0" max="50" value="18"></label>
+          <label><span>Выбросы <output id="spikesOut">5%</output></span><input id="spikes" type="range" min="0" max="20" value="5"></label>
+          <button id="seed" class="secondary">Другой шум</button>
+        </div>
+
+        <div class="control-group">
+          <h2>2. Алгоритм</h2>
+          <label>Основной фильтр<select id="filter"></select></label>
+          <label>Сравнить с<select id="compare"><option value="none">Не сравнивать</option></select></label>
+          <label id="windowLabel"><span>Окно <output id="windowOut">7</output></span><input id="window" type="range" min="3" max="21" step="2" value="7"></label>
+          <label id="strengthLabel"><span id="strengthName">Коэффициент α</span> <output id="strengthOut">0.20</output><input id="strength" type="range" min="1" max="100" value="20"></label>
+        </div>
+
+        <div class="control-group compact">
+          <h2>3. Показать</h2>
+          <label class="check"><input id="showClean" type="checkbox" checked><span class="swatch clean"></span>Идеальный сигнал</label>
+          <label class="check"><input id="showNoisy" type="checkbox" checked><span class="swatch noisy"></span>Сырые измерения</label>
+        </div>
+      </aside>
+
+      <div class="workspace">
+        <div class="chart-head">
+          <div><span class="kicker">СИМУЛЯЦИЯ · 400 ОТСЧЁТОВ</span><h2 id="chartTitle">Сравнение сигнала</h2></div>
+          <button id="reset" class="secondary small">Сбросить</button>
+        </div>
+        <div class="canvas-wrap"><canvas id="chart" aria-label="График исходного и фильтрованного сигнала"></canvas></div>
+        <div class="metrics">
+          <article><span>RMSE после</span><strong id="rmse">—</strong><small id="rmseDelta">ошибка к идеалу</small></article>
+          <article><span>Подавление ошибки</span><strong id="reduction">—</strong><small>чем выше, тем лучше</small></article>
+          <article><span>Выбросов исправлено</span><strong id="removed">—</strong><small>из добавленных импульсов</small></article>
+          <article><span>Задержка</span><strong id="lag">—</strong><small>оценка по корреляции</small></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="explanation">
+      <div><span class="kicker">КАК ЭТО РАБОТАЕТ</span><h2 id="explainTitle">—</h2><p id="explainText">—</p></div>
+      <div class="formula"><span>Формула / идея</span><code id="formula">—</code></div>
+      <div class="advice"><span>Лучше всего</span><strong id="bestFor">—</strong><span>Ограничение</span><strong id="tradeoff">—</strong></div>
+    </section>
+
+    <section class="guide">
+      <div class="section-title"><span class="kicker">БЫСТРЫЙ ВЫБОР</span><h2>Какой фильтр взять?</h2></div>
+      <div class="guide-grid">
+        <article><b>01</b><h3>Случайный шум</h3><p>Gaussian, EMA или RC Low-pass. Начните с EMA: один параметр и почти нулевая стоимость.</p></article>
+        <article><b>02</b><h3>Редкие пики</h3><p>Median или Hampel. Hampel сохраняет нормальные измерения и заменяет только аномалии.</p></article>
+        <article><b>03</b><h3>Важна форма</h3><p>Savitzky–Golay или Bilateral. Они слабее размывают вершины и быстрые переходы.</p></article>
+        <article><b>04</b><h3>Управление и трекинг</h3><p>One Euro, Kalman, Deadband или Slew-rate — выбор зависит от физики и допустимой задержки.</p></article>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>Noise Filters Visual Lab</span><a href="https://github.com/Mika-dot/Noise-filters/tree/feature/advanced-noise-filters">Код и документация →</a></footer>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,7 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);1591</NoWarn>
+    <AssemblyName>NoiseFilters</AssemblyName>
+    <RootNamespace>Filters</RootNamespace>
+    <Description>Educational, dependency-free one-dimensional signal filters for .NET.</Description>
   </PropertyGroup>
 
 </Project>

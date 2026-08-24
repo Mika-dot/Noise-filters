@@ -1,12 +1,15 @@
 # Noise Filters Visual Lab
 
-Interactive learning materials for digital filtering algorithms.
+Статический учебный стенд без серверной части и внешних JavaScript-зависимостей.
 
-## Materials
+- `index.html` — разметка лаборатории;
+- `styles.css` — адаптивное оформление;
+- `app.js` — генератор сигналов, 13 фильтров, Canvas-график и метрики;
+- `charts/` — PNG и CSV, созданные `tools/generate_charts.py`;
+- `ALGORITHMS.md` — справочник по математике и параметрам.
 
-- `playground/index.html` - browser playground for signal generation and filtering.
-- `charts/` - visual examples of algorithms.
+Локальный запуск из корня репозитория:
 
-The goal is not only implementation, but understanding the behavior of filters:
-
-Raw signal -> Noise -> Filter -> Clean signal
+```bash
+python -m http.server 8080 --directory docs
+```

@@ -1,17 +1,1 @@
-<!doctype html>
-<html><head><meta charset="utf-8"><title>Noise Filters Playground</title>
-<style>body{font-family:Arial;margin:30px}canvas{border:1px solid #999;width:100%;max-width:900px}button,select,input{margin:5px;padding:8px}</style></head>
-<body>
-<h1>Noise Filters Playground</h1>
-<p>Generate noisy signal and compare algorithms.</p>
-<label>Noise <input id="noise" type="range" min="0" max="100" value="30"></label>
-<select id="filter"><option>Moving Average</option><option>Median</option><option>Exponential</option></select>
-<button onclick="draw()">Run</button>
-<canvas id="c" width="900" height="350"></canvas>
-<script>
-function avg(a,n=10){return a.map((_,i)=>a.slice(Math.max(0,i-n),i+1).reduce((x,y)=>x+y,0)/Math.min(i+1,n));}
-function exp(a){let y=0;return a.map(x=>y+=(x-y)*0.1);}
-function median(a,n=5){return a.map((_,i)=>{let b=a.slice(Math.max(0,i-n),i+1).sort((x,y)=>x-y);return b[Math.floor(b.length/2)]});}
-function draw(){let c=document.getElementById('c'),x=c.getContext('2d');x.clearRect(0,0,900,350);let a=[...Array(200)].map((_,i)=>Math.sin(i/12)*80+150+(Math.random()-.5)*document.getElementById('noise').value);let f=document.getElementById('filter').value;let b=f==='Median'?median(a):f==='Exponential'?exp(a):avg(a);plot(x,a,'raw');plot(x,b,'filtered');}
-function plot(x,a){x.beginPath();a.forEach((v,i)=>i?x.lineTo(i*4.5,350-v):x.moveTo(i*4.5,350-v));x.stroke();}
-draw();</script></body></html>
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=../"><title>Noise Filters Lab</title></head><body><p><a href="../">Открыть интерактивную лабораторию</a></p></body></html>
