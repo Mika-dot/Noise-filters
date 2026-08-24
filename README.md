@@ -1,74 +1,214 @@
 # Noise-filters
-Algorithms for filtering input data from noise and outliers.
 
----
-Realizable algorithms.
+## Visual handbook of signal filtering algorithms
 
-- [x] Average
-- [x] Stretched selection
-- [x] Running average
-- [x] Exponential running average
-- [x] Adaptive factor
-- [x] Median filter
-- [x] Least square method
-- [x] Simple Kalman
-- [x] Alpha Beta Filter
-- [x] Values / Noise calculation
+A C# library containing practical algorithms for cleaning noisy measurements, sensor data and industrial signals.
 
-## Advanced filters
-
-Added in `AdvancedFilters.cs`:
-
-- [x] Weighted Moving Average
-- [x] Gaussian Filter
-- [x] Hampel Filter
-- [x] Savitzky-Golay smoothing
-- [x] Deadband filter
-- [x] Median Absolute Deviation analysis
+The goal of this repository is not only implementation, but also **understanding how filters change a real signal**.
 
 ---
 
-# AdvancedFilters
+# Signal filtering concept
 
-Additional algorithms for industrial sensors, telemetry, robotics and measurement systems.
+Raw measurements usually contain:
+
+- useful signal
+- random noise
+- spikes / outliers
+- measurement jitter
+- drift
+
+Example:
+
+```mermaid
+xychart-beta
+    title "Raw sensor signal vs filtered signal"
+    x-axis [1,2,3,4,5,6,7,8,9,10]
+    y-axis "Value" 0 --> 100
+    line "Raw" [20,70,25,80,30,75,35,90,40,85]
+    line "Filtered" [20,35,38,48,52,60,65,72,75,80]
+```
+
+---
+
+# Implemented algorithms
+
+| Algorithm | Noise type | Delay | CPU cost | Typical usage |
+|-|-|-|-|-|
+| Average | Random noise | Medium | Very low | Basic sensors |
+| Moving Average | Random noise | Medium | Low | Telemetry |
+| Exponential Average | Random noise | Low | Very low | Embedded |
+| Median | Spikes | Medium | Low | Industrial sensors |
+| Kalman | Dynamic systems | Low | Medium | Tracking |
+| Alpha-Beta | Motion estimation | Low | Low | Robotics |
+| Least Squares | Trend noise | High | Medium | Calibration |
+| Gaussian | High frequency noise | Medium | Medium | Signal processing |
+| Hampel | Outliers | Low | Medium | Fault detection |
+| Savitzky-Golay | Shape distortion | Low | Medium | Scientific data |
+| Deadband | Small oscillations | Zero | Very low | Control systems |
+
+---
+
+# Filter comparison
+
+## Moving Average
+
+Removes random fluctuations by averaging recent samples.
+
+```mermaid
+xychart-beta
+    title "Moving Average"
+    x-axis [1,2,3,4,5,6,7,8]
+    y-axis 0 --> 10
+    line "Input" [2,8,3,9,4,8,5,9]
+    line "Output" [2,5,5,6,6,7,7,8]
+```
+
+Advantages:
+
++ extremely simple
++ works on microcontrollers
++ predictable
+
+Disadvantages:
+
+- introduces delay
+- destroys sharp changes
+
+---
+
+# Median filter
+
+Best against impulse noise.
+
+```mermaid
+xychart-beta
+    title "Median removes spikes"
+    x-axis [1,2,3,4,5,6,7]
+    y-axis 0 --> 20
+    line "Before" [5,6,20,7,6,5,6]
+    line "After" [5,6,7,7,6,6,6]
+```
+
+---
+
+# Kalman family
+
+Used when the signal has a model and prediction is possible.
+
+```mermaid
+flowchart LR
+A[Measurement] --> B[Prediction]
+B --> C[Kalman Gain]
+C --> D[Correction]
+D --> E[Filtered value]
+```
+
+---
+
+# Advanced filters
 
 ## Weighted Moving Average
 
-Weighted averaging where every sample has an individual coefficient. Allows giving higher priority to newer or more reliable measurements.
+Gives different importance to samples.
+
+Useful when newer measurements are more valuable.
 
 ## Gaussian Filter
 
-A smoothing filter based on Gaussian distribution. It removes high-frequency noise while preserving the general signal shape.
+Smooths high frequency noise using Gaussian weights.
 
 ## Hampel Filter
 
-A robust statistical outlier detector. Impulse noise and abnormal measurements are replaced with a local median value.
+Robust removal of abnormal measurements.
 
-## Savitzky-Golay Filter
+Example:
 
-A polynomial smoothing algorithm used in scientific and engineering measurements where preservation of signal form is important.
-
-## Deadband Filter
-
-Suppresses small changes below a configurable threshold. Useful for eliminating sensor jitter in control systems.
-
-## Median Absolute Deviation
-
-A statistical noise estimation method based on deviation from the median. Can be used for adaptive anomaly detection.
-
-## Example
-
-```csharp
-var smooth = AdvancedFilters.GaussianFilter(signal);
-var clean = AdvancedFilters.HampelFilter(signal);
-var stable = AdvancedFilters.Deadband(signal, 0.05);
+```mermaid
+xychart-beta
+    title "Hampel removes outlier"
+    x-axis [1,2,3,4,5,6]
+    y-axis 0 --> 50
+    line "Input" [10,12,11,45,13,12]
+    line "Filtered" [10,12,11,12,13,12]
 ```
 
-## Applications
+## Savitzky-Golay
+
+Preserves signal shape better than ordinary averaging.
+
+Used in:
+
+- spectroscopy
+- scientific measurements
+- industrial analysis
+
+## Deadband filter
+
+Ignores insignificant changes.
+
+Example:
+
+```
+Input:
+10.00
+10.01
+10.02
+10.01
+
+Output with deadband 0.05:
+10.00
+10.00
+10.00
+10.00
+```
+
+---
+
+# Interactive playground (planned)
+
+Future version will include a browser playground:
+
+- generate noisy signal
+- select filter
+- change parameters
+- compare response
+- measure delay
+- measure noise reduction
+
+---
+
+# Library structure
+
+```
+Filters/
+ ├── BasicFilters.cs
+ ├── AdvancedFilters.cs
+ ├── StatisticalFilters.cs
+ ├── SignalFilters.cs
+ └── Examples/
+```
+
+---
+
+# Applications
 
 - Industrial automation
-- Embedded systems
-- IoT sensors
+- PLC systems
 - Robotics
-- Data acquisition
-- Control systems
+- IoT devices
+- Embedded controllers
+- Measurement equipment
+- Computer vision preprocessing
+
+---
+
+# Philosophy
+
+A filter is always a compromise between:
+
+```
+Noise reduction <-----> Signal preservation <-----> Response speed
+```
+
+The correct algorithm depends on the physical process, sensor and required response time.
