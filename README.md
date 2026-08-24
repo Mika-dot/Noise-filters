@@ -1,214 +1,156 @@
 # Noise-filters
 
-## Visual handbook of signal filtering algorithms
+> A visual, reproducible handbook of digital filters for sensor measurements,
+> industrial telemetry and embedded systems.
 
-A C# library containing practical algorithms for cleaning noisy measurements, sensor data and industrial signals.
+[Русская версия](README_ru.md) · [Interactive playground](docs/playground/index.html) · [Raw benchmark data](docs/assets/benchmarks/quality-metrics.csv)
 
-The goal of this repository is not only implementation, but also **understanding how filters change a real signal**.
+The repository contains the original C# filters, an extended filter set and a
+deterministic simulation that shows what every algorithm actually does to the
+same signal.
 
----
+## Real simulation
 
-# Signal filtering concept
+The input is not a hand-drawn diagram. It is a 720-sample synthetic sensor
+signal with two periodic components, a step, drift, Gaussian noise
+(`σ = 3.2`) and nine positive/negative impulse outliers. Random seed:
+`20260824`.
 
-Raw measurements usually contain:
+![All filters on the same noisy signal](docs/assets/benchmarks/signal-comparison.png)
 
-- useful signal
-- random noise
-- spikes / outliers
-- measurement jitter
-- drift
+### What happens around outliers
 
-Example:
+The same samples are enlarged below. A moving average spreads a spike across
+the window, while Median and Hampel treat it as an abnormal measurement.
 
-```mermaid
-xychart-beta
-    title "Raw sensor signal vs filtered signal"
-    x-axis [1,2,3,4,5,6,7,8,9,10]
-    y-axis "Value" 0 --> 100
-    line "Raw" [20,70,25,80,30,75,35,90,40,85]
-    line "Filtered" [20,35,38,48,52,60,65,72,75,80]
+![Impulse rejection comparison](docs/assets/benchmarks/impulse-rejection.png)
+
+### Step response and delay
+
+Strong smoothing is never free: causal filters reduce noise but respond later
+to a real process change. Deadband responds immediately only after its
+threshold is crossed.
+
+![Step response](docs/assets/benchmarks/step-response.png)
+
+## Measured quality
+
+Metrics are calculated after a 20-sample warm-up against the known clean
+reference. Lower RMSE/MAE is better; higher SNR improvement is better. The
+winner depends on the noise model—this mixed test deliberately favors robust
+filters because it includes impulse outliers.
+
+![Quality metrics](docs/assets/benchmarks/quality-metrics.png)
+
+| Filter | RMSE | MAE | SNR improvement | Best-fit lag |
+|---|---:|---:|---:|---:|
+| **Median** | **1.45** | **1.13** | **+10.00 dB** | 0 samples |
+| Weighted average | 1.72 | 1.23 | +8.51 dB | 0 samples |
+| Gaussian | 1.79 | 1.27 | +8.19 dB | 0 samples |
+| Simple Kalman | 1.89 | 1.45 | +7.72 dB | 3 samples |
+| Savitzky-Golay | 2.31 | 1.67 | +5.95 dB | 0 samples |
+| Moving average | 2.31 | 1.79 | +5.95 dB | 4 samples |
+| Exponential | 2.65 | 2.13 | +4.77 dB | 6 samples |
+| Hampel | 3.19 | 2.54 | +3.16 dB | 0 samples |
+| Deadband | 4.62 | 3.07 | −0.05 dB | 0 samples |
+| Alpha-Beta | 4.73 | 4.01 | −0.27 dB | 13 samples |
+
+The Alpha-Beta and Deadband results are not bugs: both are specialized tools,
+not universal denoisers. Alpha-Beta requires a motion/process model tuned to
+the data. Deadband suppresses small control chatter, but it is not designed to
+reconstruct a clean analogue waveform.
+
+## Which filter should I choose?
+
+| Problem | Start with | Why | Main trade-off |
+|---|---|---|---|
+| Rare spikes / broken samples | Hampel or Median | Robust to outliers | Median can flatten narrow features |
+| White high-frequency noise | Gaussian or Weighted Average | Strong smoothing with symmetric weights | Non-causal window adds delay in streaming |
+| Low-memory live sensor | Exponential Average | One state value, constant work | Phase lag |
+| Known dynamic system | Kalman | Prediction plus measurement correction | Must tune the model and noise |
+| Preserve peaks and curvature | Savitzky-Golay | Local polynomial fit | Sensitive to large outliers |
+| Switch/control chatter | Deadband | Ignores insignificant changes | Quantized, staircase-like output |
+| Position and velocity tracking | Alpha-Beta | Very small state estimator | Model mismatch causes lag/error |
+
+## Implemented algorithms
+
+| Family | Algorithms | Cost per sample | Memory |
+|---|---|---:|---:|
+| Basic smoothing | Average, Stretched Selection, Running Average | `O(w)` / `O(1)` optimized | `O(w)` |
+| Recursive | Exponential Average, Adaptive Factor | `O(1)` | `O(1)` |
+| Robust | Median, Hampel | `O(w log w)` | `O(w)` |
+| Weighted convolution | Weighted Average, Gaussian | `O(w)` | `O(w)` |
+| Polynomial | Least Squares, Savitzky-Golay | `O(w · p)` after coefficients | `O(w + p²)` |
+| State estimators | Simple Kalman, Alpha-Beta | `O(1)` | `O(1)` |
+| Control | Deadband | `O(1)` | `O(1)` |
+
+`w` is the window length and `p` is the polynomial order.
+
+## Reproduce every chart
+
+The chart generator contains reference implementations that mirror the C#
+equations. It writes both PNG figures and source CSV files.
+
+```bash
+python3 -m pip install numpy matplotlib
+python3 tools/generate_benchmarks.py
 ```
 
----
+Generated files are written to `docs/assets/benchmarks/`. Because the random
+seed, signal, outlier positions and parameters are fixed, repeated runs produce
+the same quality results.
 
-# Implemented algorithms
+### Reference-script runtime
 
-| Algorithm | Noise type | Delay | CPU cost | Typical usage |
-|-|-|-|-|-|
-| Average | Random noise | Medium | Very low | Basic sensors |
-| Moving Average | Random noise | Medium | Low | Telemetry |
-| Exponential Average | Random noise | Low | Very low | Embedded |
-| Median | Spikes | Medium | Low | Industrial sensors |
-| Kalman | Dynamic systems | Low | Medium | Tracking |
-| Alpha-Beta | Motion estimation | Low | Low | Robotics |
-| Least Squares | Trend noise | High | Medium | Calibration |
-| Gaussian | High frequency noise | Medium | Medium | Signal processing |
-| Hampel | Outliers | Low | Medium | Fault detection |
-| Savitzky-Golay | Shape distortion | Low | Medium | Scientific data |
-| Deadband | Small oscillations | Zero | Very low | Control systems |
+![Reference runtime](docs/assets/benchmarks/runtime-reference.png)
 
----
+This plot measures the Python chart generator on 12,000 samples (median of five
+runs). It is useful for understanding the cost of regenerating the experiment,
+but it is **not a C# performance benchmark**: NumPy vectorization and Python
+loops affect the absolute values. The raw timings are in
+[`runtime-reference.csv`](docs/assets/benchmarks/runtime-reference.csv).
 
-# Filter comparison
+## C# usage
 
-## Moving Average
+```csharp
+using Filters;
 
-Removes random fluctuations by averaging recent samples.
-
-```mermaid
-xychart-beta
-    title "Moving Average"
-    x-axis [1,2,3,4,5,6,7,8]
-    y-axis 0 --> 10
-    line "Input" [2,8,3,9,4,8,5,9]
-    line "Output" [2,5,5,6,6,7,7,8]
+double[] cleaned = AdvancedFilters.GaussianFilter(samples, size: 9, sigma: 2.0);
+double[] robust = AdvancedFilters.HampelFilter(samples, window: 4, threshold: 3.0);
+double[] shaped = AdvancedFilters.SavitzkyGolay(samples, window: 9, polynomialOrder: 3);
+double[] stable = AdvancedFilters.Deadband(samples, limit: 2.0);
 ```
 
-Advantages:
+The original integer-based algorithms remain available through `filtration`:
 
-+ extremely simple
-+ works on microcontrollers
-+ predictable
-
-Disadvantages:
-
-- introduces delay
-- destroys sharp changes
-
----
-
-# Median filter
-
-Best against impulse noise.
-
-```mermaid
-xychart-beta
-    title "Median removes spikes"
-    x-axis [1,2,3,4,5,6,7]
-    y-axis 0 --> 20
-    line "Before" [5,6,20,7,6,5,6]
-    line "After" [5,6,7,7,6,6,6]
+```csharp
+double[] moving = filtration.RunningAverage(integerSamples);
+double[] kalman = filtration.SimpleKalman(integerSamples);
+double[] tracked = filtration.AlphaBetaFilter(integerSamples);
 ```
 
----
+## Project layout
 
-# Kalman family
-
-Used when the signal has a model and prediction is possible.
-
-```mermaid
-flowchart LR
-A[Measurement] --> B[Prediction]
-B --> C[Kalman Gain]
-C --> D[Correction]
-D --> E[Filtered value]
+```text
+Filters/Filters/filtration.cs          original algorithms
+Filters/Filters/AdvancedFilters.cs     extended filter set
+tools/generate_benchmarks.py           deterministic simulation
+docs/assets/benchmarks/                generated charts and CSV metrics
+docs/playground/index.html             interactive browser demo
+Filter in charts/                      historical charts
 ```
 
----
+## Notes
 
-# Advanced filters
+- Windowed symmetric filters use future samples and are best suited to offline
+  processing. For live streams, use a trailing window or accept a delay of
+  `window / 2` samples.
+- Filter parameters must be tuned to the sensor sampling rate and the physics
+  of the measured process.
+- The benchmark is an educational comparison, not proof that one filter is
+  universally superior.
 
-## Weighted Moving Average
+## License
 
-Gives different importance to samples.
-
-Useful when newer measurements are more valuable.
-
-## Gaussian Filter
-
-Smooths high frequency noise using Gaussian weights.
-
-## Hampel Filter
-
-Robust removal of abnormal measurements.
-
-Example:
-
-```mermaid
-xychart-beta
-    title "Hampel removes outlier"
-    x-axis [1,2,3,4,5,6]
-    y-axis 0 --> 50
-    line "Input" [10,12,11,45,13,12]
-    line "Filtered" [10,12,11,12,13,12]
-```
-
-## Savitzky-Golay
-
-Preserves signal shape better than ordinary averaging.
-
-Used in:
-
-- spectroscopy
-- scientific measurements
-- industrial analysis
-
-## Deadband filter
-
-Ignores insignificant changes.
-
-Example:
-
-```
-Input:
-10.00
-10.01
-10.02
-10.01
-
-Output with deadband 0.05:
-10.00
-10.00
-10.00
-10.00
-```
-
----
-
-# Interactive playground (planned)
-
-Future version will include a browser playground:
-
-- generate noisy signal
-- select filter
-- change parameters
-- compare response
-- measure delay
-- measure noise reduction
-
----
-
-# Library structure
-
-```
-Filters/
- ├── BasicFilters.cs
- ├── AdvancedFilters.cs
- ├── StatisticalFilters.cs
- ├── SignalFilters.cs
- └── Examples/
-```
-
----
-
-# Applications
-
-- Industrial automation
-- PLC systems
-- Robotics
-- IoT devices
-- Embedded controllers
-- Measurement equipment
-- Computer vision preprocessing
-
----
-
-# Philosophy
-
-A filter is always a compromise between:
-
-```
-Noise reduction <-----> Signal preservation <-----> Response speed
-```
-
-The correct algorithm depends on the physical process, sensor and required response time.
+No license file is currently included. Add one before distributing the library
+as a reusable package.
