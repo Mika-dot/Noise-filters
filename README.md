@@ -1,13 +1,13 @@
 # Noise Filters — фильтрация сигналов на C#
 
 [![CI](https://github.com/Mika-dot/Noise-filters/actions/workflows/ci.yml/badge.svg?branch=feature%2Fadvanced-noise-filters)](https://github.com/Mika-dot/Noise-filters/actions/workflows/ci.yml)
-[![Interactive lab](https://img.shields.io/badge/interactive-lab-1268fb)](https://mika-dot.github.io/Noise-filters/)
+[![Interactive lab](https://img.shields.io/badge/interactive-lab-1268fb)](https://raw.githack.com/Mika-dot/Noise-filters/feature/advanced-noise-filters/docs/index.html)
 [![.NET Standard 2.0](https://img.shields.io/badge/.NET-Standard%202.0-512bd4)](Filters/Filters/Filters.csproj)
 [![Algorithms](https://img.shields.io/badge/algorithms-25%2B-ff5c35)](#каталог-алгоритмов)
 
 Учебная библиотека одномерных фильтров: от скользящего среднего до Hampel, Savitzky–Golay, One Euro и Калмана. Здесь можно не только взять готовый C#-код, но и **увидеть, что каждый алгоритм делает с одним и тем же сигналом**, сравнить RMSE, задержку и устойчивость к выбросам.
 
-> Откройте **[интерактивную лабораторию](https://mika-dot.github.io/Noise-filters/)**: выберите форму сигнала, добавьте шум и выбросы, меняйте параметры двух фильтров одновременно. Исходник без внешних зависимостей лежит в [`docs/`](docs/).
+> Откройте **[интерактивную лабораторию](https://raw.githack.com/Mika-dot/Noise-filters/feature/advanced-noise-filters/docs/index.html)**: выберите форму сигнала, добавьте шум и выбросы, меняйте параметры двух фильтров одновременно. Исходник без внешних зависимостей лежит в [`docs/`](docs/).
 
 ![Сравнение фильтров на одном сигнале](docs/charts/overview.png)
 
@@ -194,7 +194,7 @@ python tools/generate_charts.py
 python -m http.server 8080 --directory docs
 ```
 
-Откройте `http://localhost:8080`. Для GitHub Pages предусмотрен workflow [`pages.yml`](.github/workflows/pages.yml).
+Откройте `http://localhost:8080`. Публичная версия уже доступна через raw.githack; workflow [`pages.yml`](.github/workflows/pages.yml) также готов для ручного запуска после одноразового включения GitHub Pages в настройках репозитория.
 
 ## Проверка
 
