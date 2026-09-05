@@ -16,6 +16,31 @@ var tests = new (string Name, Action Run)[]
     ("slew rate limits", () => Equal(SignalFilters.SlewRateLimiter(new double[] { 0, 10, -10 }, 2, 3), 0, 2, -1)),
     ("debounce waits", () => Equal(SignalFilters.Debounce(new double[] { 0, 1, 0, 1, 1, 1 }, 3), 0, 0, 0, 0, 0, 1)),
     ("Kalman output finite", () => Finite(StateEstimationFilters.ScalarKalman(new double[] { 0, 1, 2, 3 }))),
+    ("wavelet preserves constant", () => Equal(ModernDenoisingFilters.WaveletHaarShrinkage(new double[] { 5, 5, 5, 5, 5, 5, 5, 5 }), 5, 5, 5, 5, 5, 5, 5, 5)),
+    ("SSA rank-1 preserves constant", () =>
+    {
+        double[] y = ModernDenoisingFilters.SingularSpectrumAnalysis(Enumerable.Repeat(7.0, 24).ToArray(), window: 8, rank: 1);
+        foreach (double value in y) Near(value, 7.0, 1e-7);
+    }),
+    ("reweighted SVD keeps length and finite", () =>
+    {
+        double[] input = Enumerable.Range(0, 40).Select(i => Math.Sin(i * 0.2) + (i % 7 == 0 ? 0.3 : 0)).ToArray();
+        double[] y = ModernDenoisingFilters.ReweightedSvdDenoise(input, window: 10);
+        if (y.Length != input.Length) throw new Exception("length changed");
+        Finite(y);
+    }),
+    ("TV denoising lowers total variation", () =>
+    {
+        double[] input = { 0, 0.4, -0.3, 0.5, 5, 5.5, 4.6, 5.2 };
+        double[] y = ModernDenoisingFilters.TotalVariationDenoise(input, lambda: 0.8, iterations: 200);
+        if (TotalVariation(y) > TotalVariation(input) + 1e-9) throw new Exception("variation increased");
+    }),
+    ("robust adaptive Kalman rejects isolated spike", () =>
+    {
+        double[] y = ModernDenoisingFilters.RobustAdaptiveKalman(new double[] { 0, 0, 0, 100, 0, 0, 0 }, measurementNoise: 1, processNoise: 0.01);
+        if (Math.Abs(y[3]) >= 30) throw new Exception($"spike leaked too strongly: {y[3]}");
+        Finite(y);
+    }),
     ("empty input supported", () => Equal(BasicFilters.MovingAverage(Array.Empty<double>(), 3))),
     ("invalid window rejected", () => Throws<ArgumentException>(() => BasicFilters.Median(new double[] { 1 }, 2))),
     ("metrics", () => Near(FilterMetrics.RootMeanSquareError(new double[] { 0, 0 }, new double[] { 3, 4 }), Math.Sqrt(12.5)))
@@ -42,6 +67,12 @@ static void Near(double actual, double expected, double tolerance = 1e-10)
 static void Finite(IEnumerable<double> values)
 {
     if (values.Any(x => double.IsNaN(x) || double.IsInfinity(x))) throw new Exception("non-finite result");
+}
+static double TotalVariation(IReadOnlyList<double> values)
+{
+    double total = 0;
+    for (int i = 1; i < values.Count; i++) total += Math.Abs(values[i] - values[i - 1]);
+    return total;
 }
 static void Throws<T>(Action action) where T : Exception
 {
