@@ -1,0 +1,13 @@
+scenario,method,rmse,snr_db,correlation,selected_k,selected_alpha
+structured_interference,Raw,0.762909,2.949380,0.810363,,
+structured_interference,Moving average,0.410496,8.332664,0.920712,,
+structured_interference,Median,0.481275,6.950968,0.890667,,
+structured_interference,Savitzky-Golay,0.263913,12.169607,0.967905,,
+structured_interference,Reweighted SVD,0.706468,3.616987,0.823583,,
+structured_interference,Adaptive VMD structure,0.224222,13.585261,0.977843,4,250.0
+broadband_impulsive,Raw,1.190140,0.405882,0.717797,,
+broadband_impulsive,Moving average,0.445557,8.939786,0.931925,,
+broadband_impulsive,Median,0.484999,8.203038,0.921390,,
+broadband_impulsive,Savitzky-Golay,0.520451,7.590250,0.917636,,
+broadband_impulsive,Reweighted SVD,0.637368,5.830039,0.872435,,
+broadband_impulsive,Adaptive VMD structure,0.608672,6.230175,0.894910,4,250.0
