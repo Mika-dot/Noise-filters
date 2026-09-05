@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feature/advanced-noise-filters, feature/recent-denoising-2026]
+    branches: [main, feature/advanced-noise-filters, feature/recent-denoising-2026, feature/adaptive-decomposition-2026]
   pull_request:
 
 jobs:
@@ -29,4 +29,6 @@ jobs:
       - name: Test reference simulations
         run: python tests/test_benchmarks.py
       - name: Validate chart generators
-        run: python -m py_compile tools/generate_benchmarks.py tools/generate_charts.py tools/generate_recent_benchmark.py
+        run: python -m py_compile tools/generate_benchmarks.py tools/generate_charts.py tools/generate_recent_benchmark.py tools/generate_adaptive_vmd_benchmark.py
+      - name: Execute adaptive VMD benchmark
+        run: python tools/generate_adaptive_vmd_benchmark.py
