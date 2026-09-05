@@ -41,6 +41,44 @@ var tests = new (string Name, Action Run)[]
         if (Math.Abs(y[3]) >= 30) throw new Exception($"spike leaked too strongly: {y[3]}");
         Finite(y);
     }),
+    ("VMD returns finite separated modes", () =>
+    {
+        double[] input = Enumerable.Range(0, 48)
+            .Select(i => Math.Sin(2 * Math.PI * i / 12.0) + 0.35 * Math.Sin(2 * Math.PI * i / 4.0))
+            .ToArray();
+        VmdResult result = AdaptiveDecompositionFilters.VariationalModeDecomposition(
+            input, modes: 2, alpha: 500, tau: 0.1, tolerance: 1e-4, maxIterations: 80);
+        if (result.Modes.Length != 2 || result.Modes.Any(m => m.Length != input.Length)) throw new Exception("unexpected VMD dimensions");
+        if (result.CenterFrequencies.Any(f => f < 0 || f > 0.5)) throw new Exception("invalid VMD center frequency");
+        foreach (double[] mode in result.Modes) Finite(mode);
+        Finite(result.Reconstruct());
+    }),
+    ("adaptive VMD selects a valid model", () =>
+    {
+        double[] input = Enumerable.Range(0, 48)
+            .Select(i => Math.Sin(2 * Math.PI * i / 16.0) + 0.25 * Math.Sin(2 * Math.PI * i / 5.0) + (i % 13 == 0 ? 0.45 : 0))
+            .ToArray();
+        AdaptiveVmdResult result = AdaptiveDecompositionFilters.AdaptiveVmdWaveletDenoise(
+            input, maxModes: 3, alphaCandidates: new double[] { 500, 1500 }, searchIterations: 25, finalIterations: 50);
+        if (result.Signal.Length != input.Length) throw new Exception("adaptive VMD changed length");
+        if (result.ModeCount < 2 || result.ModeCount > 3) throw new Exception("invalid selected mode count");
+        if (result.Alpha != 500 && result.Alpha != 1500) throw new Exception("alpha not selected from candidate grid");
+        Finite(result.Signal);
+    }),
+    ("permutation entropy detects constant signal", () =>
+        Near(AdaptiveDecompositionFilters.PermutationEntropy(Enumerable.Repeat(3.0, 20).ToArray()), 0.0)),
+    ("NLMS cancels correlated reference noise", () =>
+    {
+        const int n = 160;
+        double[] clean = Enumerable.Range(0, n).Select(i => Math.Sin(2 * Math.PI * i / 40.0)).ToArray();
+        double[] reference = Enumerable.Range(0, n).Select(i => Math.Sin(2 * Math.PI * i / 7.0)).ToArray();
+        double[] primary = clean.Select((v, i) => v + 0.8 * reference[i]).ToArray();
+        double[] filtered = AdaptiveDecompositionFilters.NormalizedLmsNoiseCancel(primary, reference, taps: 8, stepSize: 0.45);
+        double rawError = Rmse(primary.Skip(80).ToArray(), clean.Skip(80).ToArray());
+        double filteredError = Rmse(filtered.Skip(80).ToArray(), clean.Skip(80).ToArray());
+        if (filteredError >= rawError) throw new Exception($"NLMS did not improve RMSE: {filteredError} >= {rawError}");
+        Finite(filtered);
+    }),
     ("empty input supported", () => Equal(BasicFilters.MovingAverage(Array.Empty<double>(), 3))),
     ("invalid window rejected", () => Throws<ArgumentException>(() => BasicFilters.Median(new double[] { 1 }, 2))),
     ("metrics", () => Near(FilterMetrics.RootMeanSquareError(new double[] { 0, 0 }, new double[] { 3, 4 }), Math.Sqrt(12.5)))
@@ -73,6 +111,14 @@ static double TotalVariation(IReadOnlyList<double> values)
     double total = 0;
     for (int i = 1; i < values.Count; i++) total += Math.Abs(values[i] - values[i - 1]);
     return total;
+}
+static double Rmse(IReadOnlyList<double> a, IReadOnlyList<double> b)
+{
+    if (a.Count != b.Count) throw new Exception("RMSE length mismatch");
+    if (a.Count == 0) return 0;
+    double sum = 0;
+    for (int i = 0; i < a.Count; i++) { double d = a[i] - b[i]; sum += d * d; }
+    return Math.Sqrt(sum / a.Count);
 }
 static void Throws<T>(Action action) where T : Exception
 {
