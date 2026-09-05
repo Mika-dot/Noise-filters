@@ -1,74 +1,79 @@
 # Noise Filters — исследовательская библиотека фильтрации 1D-сигналов на C#
 
 [![Repository](https://img.shields.io/badge/GitHub-Mika--dot%2FNoise--filters-181717?logo=github)](https://github.com/Mika-dot/Noise-filters)
-[![Advanced branch](https://img.shields.io/badge/branch-advanced--noise--filters-1268fb)](https://github.com/Mika-dot/Noise-filters/tree/feature/advanced-noise-filters)
-[![Recent research](https://img.shields.io/badge/research-2024--2026-7c3aed)](https://github.com/Mika-dot/Noise-filters/tree/feature/recent-denoising-2026)
+[![.NET](https://img.shields.io/badge/.NET-Standard%202.0-512bd4)](https://github.com/Mika-dot/Noise-filters/blob/feature/advanced-noise-filters/Filters/Filters/Filters.csproj)
+[![Advanced](https://img.shields.io/badge/branch-advanced-1268fb)](https://github.com/Mika-dot/Noise-filters/tree/feature/advanced-noise-filters)
+[![Recent](https://img.shields.io/badge/research-2024--2026-7c3aed)](https://github.com/Mika-dot/Noise-filters/tree/feature/recent-denoising-2026)
+[![Adaptive VMD](https://img.shields.io/badge/research-adaptive%20VMD-0f766e)](https://github.com/Mika-dot/Noise-filters/tree/feature/adaptive-decomposition-2026)
 
-Репозиторий — это не один фильтр, а последовательное исследование способов очистки одномерных измерительных сигналов: от простого среднего и медианы до Hampel, Savitzky–Golay, One Euro, Kalman, SSA, wavelet shrinkage, total variation и адаптивного SVD.
+Репозиторий превратился из набора простых фильтров в последовательное исследование методов очистки одномерных измерительных сигналов: **moving average → robust statistics → DSP/state estimation → wavelet/SSA/SVD → adaptive Kalman → VMD + автоматический выбор мод**.
 
-`main` используется как **витрина и карта всех веток**. Реализации более новых алгоритмов находятся в исследовательских ветках и не скрыты за одним огромным файлом.
+`main` намеренно используется как **витрина всех веток**. Новые исследования остаются отдельными ветками, чтобы можно было видеть эволюцию алгоритмов, сравнивать реализации и не смешивать экспериментальный код с историческим baseline.
 
-## Ветки
+> Benchmark-цифры из разных разделов получены на разных детерминированных сценариях. Их нельзя складывать в один глобальный рейтинг.
 
-| Ветка | Назначение | Что внутри |
-|---|---|---|
-| [`main`](https://github.com/Mika-dot/Noise-filters/tree/main) | Исторический baseline | Первые фильтры, исходные графики, `filtration.cs` |
-| [`feature/advanced-noise-filters`](https://github.com/Mika-dot/Noise-filters/tree/feature/advanced-noise-filters) | Расширенная библиотека | 30 современных практических фильтров, единый API, тесты, CI, examples, интерактивная лаборатория, benchmark |
-| [`feature/recent-denoising-2026`](https://github.com/Mika-dot/Noise-filters/tree/feature/recent-denoising-2026) | Новое исследование 2024–2026 | Wavelet shrinkage, SSA, reweighted SVD, TV-denoising, robust adaptive Kalman, свежий benchmark и обзор литературы |
+## Ветки и поколения
 
-> Важное замечание: benchmark-цифры разных веток получены на **разных детерминированных сценариях**. Их нельзя напрямую сравнивать между таблицами как единый рейтинг.
+| Ветка | Поколение | Основная идея | Что добавлено |
+|---|---|---|---|
+| [`main`](https://github.com/Mika-dot/Noise-filters/tree/main) | v1 / baseline | Простые фильтры и первые эксперименты | Average, running average, EMA, median, LSQ, simple Kalman, α–β |
+| [`feature/advanced-noise-filters`](https://github.com/Mika-dot/Noise-filters/tree/feature/advanced-noise-filters) | v2 / practical DSP | Нормальная библиотека и единый API | 30 методов, robust filters, SG, One Euro, bilateral, proper scalar Kalman, tests, CI, lab |
+| [`feature/recent-denoising-2026`](https://github.com/Mika-dot/Noise-filters/tree/feature/recent-denoising-2026) | v3 / modern denoising | Batch/low-rank/multiscale методы | wavelet shrinkage, SSA, reweighted SVD, TV, robust adaptive Kalman |
+| [`feature/adaptive-decomposition-2026`](https://github.com/Mika-dot/Noise-filters/tree/feature/adaptive-decomposition-2026) | v4 / adaptive decomposition | Автоматическая декомпозиция нестационарных сигналов | VMD, auto `K/α`, permutation entropy, structure-aware IMF selection, NLMS |
 
----
-
-## Быстрый выбор алгоритма
+## Быстрый выбор
 
 ```mermaid
 flowchart TD
-    A{"Какой шум / задача?"} -->|"Редкие выбросы"| B["Hampel / Median / AdaptiveMedian"]
-    A -->|"Белый шум"| C["Gaussian / EMA / Savitzky-Golay"]
-    A -->|"Нужно сохранить фронты"| D["Bilateral / Total Variation"]
-    A -->|"Движение, координаты"| E["One Euro / Kalman / Alpha-Beta"]
-    A -->|"Шум меняется со временем"| F["RobustAdaptiveKalman"]
-    A -->|"Периодика / низкоранговая структура"| G["SSA / Reweighted SVD"]
-    A -->|"Многомасштабный шум"| H["WaveletHaarShrinkage"]
-    A -->|"Дребезг / физические ограничения"| I["Debounce / Deadband / SlewRateLimiter"]
+    A{"Что за помеха?"}
+    A -->|"Редкие выбросы"| B["Hampel / Median / AdaptiveMedian"]
+    A -->|"Broadband sensor noise"| C["EMA / Gaussian / MovingAverage"]
+    A -->|"Нужно сохранить форму пиков"| D["Savitzky-Golay"]
+    A -->|"Резкие ступени / фронты"| E["Bilateral / Total Variation"]
+    A -->|"Координаты / движение"| F["One Euro / Kalman / Alpha-Beta"]
+    A -->|"Q/R меняются + выбросы"| G["RobustAdaptiveKalman"]
+    A -->|"Периодика / low-rank"| H["SSA / Reweighted SVD"]
+    A -->|"Multiscale high-frequency noise"| I["Wavelet shrinkage"]
+    A -->|"Узкополосная помеха + нестационарный signal"| J["Adaptive VMD"]
+    A -->|"Есть reference noise channel"| K["NLMS"]
 ```
 
-| Сценарий | Начать с | Сильная сторона | Основной минус |
+| Задача | Начать с | Почему | Ограничение |
 |---|---|---|---|
-| Импульсные пики | `Hampel` | Меняет только аномальные точки | Нужно выбрать окно/threshold |
-| Плотный impulse noise | `Median` | Почти не зависит от амплитуды выброса | Съедает тонкие детали |
-| Обычный шум датчика | `EMA` / `Gaussian` | Просто, быстро, предсказуемо | Задержка / размытие |
-| Сохранить форму гладкого пика | `SavitzkyGolay` | Локальная полиномиальная модель | Плохо переносит сильные выбросы |
-| Сохранить резкую ступень | `Bilateral` / `TotalVariationDenoise` | Edge-preserving | Нелинейность / вычислительная цена |
-| Координаты мыши/pose/tracker | `OneEuro` | Ослабляет сглаживание при быстром движении | Нужна настройка cutoff/beta |
-| Известны дисперсии шума | `ScalarKalman` | Физически интерпретируемые параметры | Модель должна соответствовать процессу |
-| Дисперсия шума плавает + выбросы | `RobustAdaptiveKalman` | Онлайн-адаптация `R` + robust innovation | Всё ещё простая scalar-state модель |
-| Периодический/структурный batch-сигнал | `SSA` | Выделяет низкоранговую структуру | O(L²K + L³), не MCU-фильтр |
-| Нужен мягкий low-rank shrinkage | `ReweightedSvdDenoise` | Не требует жёсткого отсечения rank | Batch и дороже оконных методов |
-| Многомасштабный высокочастотный шум | `WaveletHaarShrinkage` | Локализация по масштабу | Haar грубее Daubechies/Symlet |
+| Одиночные spikes | `Hampel` | Меняет только аномальные точки | Window + threshold |
+| Плотный impulse noise | `Median` | Амплитуда выброса почти не влияет | Может съесть детали |
+| Белый шум датчика | `EMA` / `Gaussian` | Быстро и предсказуемо | Lag / blur |
+| Сохранить smooth peak | `SavitzkyGolay` | Local polynomial | Не любит сильные spikes |
+| Сохранить step | `Bilateral` / `TV` | Edge-preserving | Дороже/нелинейно |
+| Position / pose / cursor | `OneEuro` | Фильтрация зависит от скорости | Нужна настройка cutoff/beta |
+| Известна noise model | `ScalarKalman` | Интерпретируемые Q/R | Модель должна быть адекватна |
+| Noise covariance плавает | `RobustAdaptiveKalman` | Online adaptation + robust innovation | Scalar-state baseline |
+| Quasi-periodic batch signal | `SSA` | Low-rank trajectory structure | Batch, дорогая линейная алгебра |
+| Мягкое SVD-denoising | `ReweightedSvdDenoise` | Нет жёсткого rank cutoff | Batch |
+| Narrow-band interference | `AdaptiveVmdEntropyCorrelationDenoise` | Разделяет signal/noise по модам | Сейчас reference DFT backend |
+| Есть отдельный датчик помехи | `NormalizedLmsNoiseCancel` | Адаптивно вычитает correlated noise | Нужен хороший reference channel |
 
 ---
 
-# 1. `main` — исходные алгоритмы
+# 1. `main` — исторический baseline
 
-Историческая реализация находится в [`Filters/Filters/filtration.cs`](Filters/Filters/filtration.cs). Она сохранена как baseline для сравнения с дальнейшими ветками.
+Исходная реализация: [`Filters/Filters/filtration.cs`](Filters/Filters/filtration.cs).
 
-| Метод | Тип | Онлайн | Особенность |
+| Метод | Тип | Online | Особенность |
 |---|---|:---:|---|
-| `NoiseCalculation` | диагностическая эвристика | ✓ | Оценка типичного шума и крупных выбросов |
-| `Average` | box average | — | Простое усреднение окна |
-| `StretchedSelection` | block average / sample-and-hold | ✓ | Новое среднее только после накопления блока |
-| `RunningAverage` | moving average | ✓ | Кольцевой буфер последних отсчётов |
-| `ExponentialRunningAverage` | EMA/IIR | ✓ | Минимум памяти, настраиваемая инерция |
-| `AdaptiveFactor` | adaptive EMA | ✓ | Коэффициент зависит от отклонения нового измерения |
-| `MedianFilter` | median | зависит | Устойчив к impulse noise |
-| `LeastSquareMethod2` | linear LSQ | — | Линейная аппроксимация + RMS error |
-| `LeastSquareMethod3` | quadratic LSQ | — | Квадратичная аппроксимация + RMS error |
-| `SimpleKalman` | scalar adaptive-like Kalman | ✓ | Лёгкий трекер без полной state-space модели |
-| `AlphaBetaFilter` | α–β tracker | ✓ | Значение + скорость |
+| `NoiseCalculation` | heuristic diagnostics | ✓ | Оценка шума/выбросов |
+| `Average` | box average | — | Усреднение окна |
+| `StretchedSelection` | block average | ✓ | Sample-and-hold после блока |
+| `RunningAverage` | moving average | ✓ | Ring-buffer |
+| `ExponentialRunningAverage` | EMA / IIR | ✓ | Минимум памяти |
+| `AdaptiveFactor` | adaptive EMA | ✓ | Коэффициент зависит от ошибки |
+| `MedianFilter` | median | зависит | Impulse-noise robustness |
+| `LeastSquareMethod2` | linear LSQ | — | Linear fit + RMS |
+| `LeastSquareMethod3` | quadratic LSQ | — | Quadratic fit + RMS |
+| `SimpleKalman` | lightweight tracker | ✓ | Историческая Kalman-like версия |
+| `AlphaBetaFilter` | α–β | ✓ | Position + velocity |
 
-### Исторические графики
+### Старые графики
 
 <table>
 <tr>
@@ -81,75 +86,37 @@ flowchart TD
 </tr>
 </table>
 
-Все старые графики: [`Filter in charts/`](https://github.com/Mika-dot/Noise-filters/tree/main/Filter%20in%20charts).
+Все исторические изображения: [`Filter in charts/`](https://github.com/Mika-dot/Noise-filters/tree/main/Filter%20in%20charts).
 
 ---
 
-# 2. `feature/advanced-noise-filters` — расширенная библиотека
+# 2. `feature/advanced-noise-filters` — practical DSP library
 
-Ветка: **[`feature/advanced-noise-filters`](https://github.com/Mika-dot/Noise-filters/tree/feature/advanced-noise-filters)**
+Ветка: [`feature/advanced-noise-filters`](https://github.com/Mika-dot/Noise-filters/tree/feature/advanced-noise-filters)
 
-Это основная практическая версия библиотеки: `double[]` / `IReadOnlyList<double>`, проверка параметров, mirror boundary handling, .NET Standard 2.0, dependency-free tests, examples, CI и интерактивная HTML-лаборатория.
+Здесь появился нормальный API `double[] / IReadOnlyList<double>`, validation, mirror boundaries, `.NET Standard 2.0`, dependency-free tests, CI, console example и interactive lab.
 
-## BasicFilters
+## Basic / statistical
 
-| Метод | Сложность | Онлайн | Особенность |
-|---|---:|:---:|---|
-| `MovingAverage` | O(n) | ✓ | Причинное скользящее среднее |
-| `CenteredMovingAverage` | O(n·w) | — | Симметричное окно |
-| `WeightedMovingAverage` | O(n·w) | зависит | Произвольные веса |
-| `TriangularMovingAverage` | O(n·w) | — | Больший вес центральным точкам |
-| `ExponentialMovingAverage` | O(n) | ✓ | Классический EMA |
-| `DoubleExponentialMovingAverage` | O(n) | ✓ | Частичная компенсация lag |
-| `HoltLinearTrend` | O(n) | ✓ | Уровень + линейный тренд |
-| `Median` | O(n·w log w) | — | Робастность к выбросам |
-| `Percentile` | O(n·w log w) | — | Квантильная огибающая |
-| `Mode` | O(n·w) | — | Полезен для квантованных/дискретных измерений |
+`MovingAverage`, `CenteredMovingAverage`, `WeightedMovingAverage`, `TriangularMovingAverage`, `ExponentialMovingAverage`, `DoubleExponentialMovingAverage`, `HoltLinearTrend`, `Median`, `Percentile`, `Mode`.
 
-## RobustFilters
+## Robust
 
-| Метод | Идея | Лучше всего для |
-|---|---|---|
-| `Hampel` | local median + MAD | Редкие выбросы |
-| `MedianAbsoluteDeviationCleaner` | global robust z-score | Очистка конечной выборки |
-| `SigmaClip` | итеративный mean/std clip | Почти Gaussian data |
-| `TukeyFence` | IQR fences | Ограничение хвостов |
-| `TrimmedMean` | удалить хвосты окна | Смешанный шум |
-| `WinsorizedMean` | прижать хвосты | Плавный robust average |
-| `AdaptiveMedian` | окно растёт до надёжной медианы | Переменная плотность impulse noise |
+`Hampel`, `MedianAbsoluteDeviationCleaner`, `SigmaClip`, `TukeyFence`, `TrimmedMean`, `WinsorizedMean`, `AdaptiveMedian`.
 
-## SignalFilters
+## DSP / control
 
-| Метод | Класс | Ключевая особенность |
-|---|---|---|
-| `Gaussian` | symmetric FIR | Гладкое частотное подавление |
-| `SavitzkyGolay` | local polynomial | Сохраняет форму пиков/производные |
-| `Fir` | FIR | Пользовательские коэффициенты |
-| `LowPassRc` | 1st-order IIR LPF | Простая физическая RC-модель |
-| `HighPassRc` | 1st-order IIR HPF | Удаление DC/slow drift |
-| `Complementary` | sensor fusion | Смешение low/high-frequency источников |
-| `OneEuro` | adaptive LPF | Малый lag при движении |
-| `Bilateral` | nonlinear edge-preserving | Не смешивает сильно разные уровни |
-| `Deadband` | nonlinear control | Игнорирует мелкую вибрацию |
-| `SlewRateLimiter` | physical limiter | Ограничивает невозможную скорость изменения |
-| `Debounce` | state stabilizer | Дребезг дискретного сигнала |
+`Gaussian`, `SavitzkyGolay`, `Fir`, `LowPassRc`, `HighPassRc`, `Complementary`, `OneEuro`, `Bilateral`, `Deadband`, `SlewRateLimiter`, `Debounce`.
 
-## StateEstimationFilters
+## State estimation
 
-| Метод | Состояние | Сценарий |
-|---|---|---|
-| `ScalarKalman` | value + variance | Скалярный датчик с постоянными Q/R |
-| `AlphaBeta` | position + velocity | Быстрый дешёвый tracker |
-
-`AdvancedFilters` оставлен как compatibility facade для старых вызовов.
+`ScalarKalman`, `AlphaBeta`.
 
 ### Advanced benchmark
 
-![Advanced overview](https://raw.githubusercontent.com/Mika-dot/Noise-filters/feature/advanced-noise-filters/docs/charts/overview.png)
+Сценарий: 600 samples @ 50 Hz, periodic components + step + Gaussian noise `σ=5.2` + 25 outliers, seed `20260824`.
 
-Сценарий advanced-ветки: 600 отсчётов, 50 Гц, сумма синусов, ступень, Gaussian noise σ=5.2 и 25 выбросов, seed `20260824`.
-
-| Фильтр | RMSE | Снижение ошибки | Оценка lag |
+| Filter | RMSE | Error reduction | Lag estimate |
 |---|---:|---:|---:|
 | Median | **2.62** | 75.76% | 0 |
 | Moving average | 3.61 | 66.54% | 1 |
@@ -160,153 +127,182 @@ flowchart TD
 | Kalman | 5.88 | 45.61% | 10 |
 | One Euro | 7.70 | 28.70% | 4 |
 
-![Advanced RMSE benchmark](https://raw.githubusercontent.com/Mika-dot/Noise-filters/feature/advanced-noise-filters/docs/charts/benchmark.png)
+![Advanced benchmark](https://raw.githubusercontent.com/Mika-dot/Noise-filters/feature/advanced-noise-filters/docs/charts/benchmark.png)
 
-Исходные данные: [`benchmark.csv`](https://github.com/Mika-dot/Noise-filters/blob/feature/advanced-noise-filters/docs/charts/benchmark.csv).
-
-Интерактивная лаборатория: [`docs/index.html`](https://github.com/Mika-dot/Noise-filters/blob/feature/advanced-noise-filters/docs/index.html).
+- [Interactive lab](https://raw.githack.com/Mika-dot/Noise-filters/feature/advanced-noise-filters/docs/index.html)
+- [Algorithm notes](https://github.com/Mika-dot/Noise-filters/blob/feature/advanced-noise-filters/docs/ALGORITHMS.md)
+- [Benchmark CSV](https://github.com/Mika-dot/Noise-filters/blob/feature/advanced-noise-filters/docs/charts/benchmark.csv)
 
 ---
 
-# 3. `feature/recent-denoising-2026` — новые методы и свежая литература
+# 3. `feature/recent-denoising-2026` — wavelet / low-rank / adaptive estimation
 
-Ветка: **[`feature/recent-denoising-2026`](https://github.com/Mika-dot/Noise-filters/tree/feature/recent-denoising-2026)**
+Ветка: [`feature/recent-denoising-2026`](https://github.com/Mika-dot/Noise-filters/tree/feature/recent-denoising-2026)
 
-Новый файл: [`ModernDenoisingFilters.cs`](https://github.com/Mika-dot/Noise-filters/blob/feature/recent-denoising-2026/Filters/Filters/ModernDenoisingFilters.cs).
+Основной файл: [`ModernDenoisingFilters.cs`](https://github.com/Mika-dot/Noise-filters/blob/feature/recent-denoising-2026/Filters/Filters/ModernDenoisingFilters.cs).
 
-| Метод | Семейство | Онлайн | Что исследуется |
+| Method | Family | Online | Идея |
 |---|---|:---:|---|
-| `WaveletHaarShrinkage` | multiresolution wavelet | — | MAD noise estimate + universal soft/hard threshold |
-| `SingularSpectrumAnalysis` | SSA / low-rank | — | Hankel embedding + truncated signal subspace |
-| `ReweightedSvdDenoise` | adaptive weighted SVD | — | Мягкое подавление слабых singular components вместо жёсткого rank cut |
-| `TotalVariationDenoise` | ROF / TV | — | Edge-preserving denoising для piecewise-smooth сигналов |
-| `RobustAdaptiveKalman` | adaptive state estimation | ✓ | Онлайн-оценка measurement noise + Huber-style downweighting выбросов |
-
-### Что подсказала литература 2024–2026
-
-Современные публикации всё чаще переходят от одного фиксированного LPF к гибридам: adaptive decomposition + wavelet threshold, SVD/SSA с автоматическим выбором компонент и Kalman с меняющейся оценкой ковариации шума.
-
-Ветка опирается как направление исследования, в частности, на:
-
-- Sensors 2025: adaptive/reweighted SVD для vibration denoising — DOI `10.3390/s25082470`;
-- Applied Sciences 2025: adaptive SVD в time + frequency domains — DOI `10.3390/app152212034`;
-- IEEE Sensors Journal 2024: robust adaptive Sage–Husa/variational Kalman — DOI `10.1109/JSEN.2024.3421271`;
-- Sensors 2026: parameter-adaptive VMD + wavelet threshold — DOI `10.3390/s26133974`;
-- Sensors 2026: ICFO–SVMD + improved wavelet threshold — DOI `10.3390/s26020750`;
-- arXiv 2026: differentiable time-varying IIR filtering for low-latency denoising — `arXiv:2603.02794`.
-
-Полный разбор и ограничения: [`docs/RESEARCH_2026.md`](https://github.com/Mika-dot/Noise-filters/blob/feature/recent-denoising-2026/docs/RESEARCH_2026.md).
+| `WaveletHaarShrinkage` | wavelet | — | Haar DWT + MAD + universal threshold |
+| `SingularSpectrumAnalysis` | SSA | — | Hankel embedding + truncated eigenspace |
+| `ReweightedSvdDenoise` | low-rank | — | Adaptive singular-value shrinkage |
+| `TotalVariationDenoise` | variational | — | ROF/TV, сохраняет steps |
+| `RobustAdaptiveKalman` | state estimation | ✓ | Online `R` adaptation + Huber innovation |
 
 ### Recent benchmark
 
-Сценарий: 600 отсчётов при 50 Гц; две синусоиды, ступень, медленный drift; Gaussian noise σ=1.6; 22 impulse outliers; seed `20260905`.
+| Method | RMSE | RMSE around spikes |
+|---|---:|---:|
+| **Reweighted SVD** | **0.8358** | 1.5169 |
+| SSA rank 6 | 0.8523 | **1.1597** |
+| Savitzky–Golay | 0.9850 | 1.7747 |
+| Wavelet Haar | 0.9982 | 1.7230 |
+| Robust adaptive Kalman | 1.2776 | 1.2584 |
+| TV | 1.4426 | 3.8380 |
+| Raw | 2.2699 | 5.2868 |
 
-![Recent denoising benchmark](https://raw.githubusercontent.com/Mika-dot/Noise-filters/feature/recent-denoising-2026/docs/charts/recent_benchmark.svg)
+![Recent benchmark](https://raw.githubusercontent.com/Mika-dot/Noise-filters/feature/recent-denoising-2026/docs/charts/recent_benchmark.svg)
 
-| Фильтр | RMSE | MAE | RMSE возле выбросов | RMSE вне выбросов |
-|---|---:|---:|---:|---:|
-| Reweighted SVD | **0.8358** | **0.6339** | 1.5169 | **0.7168** |
-| SSA rank 6 | 0.8523 | 0.6687 | **1.1597** | 0.8094 |
-| Savitzky–Golay | 0.9850 | 0.7700 | 1.7747 | 0.8480 |
-| Wavelet Haar | 0.9982 | 0.7426 | 1.7230 | 0.8770 |
-| Robust adaptive Kalman | 1.2776 | 0.9933 | 1.2584 | 1.2798 |
-| Total Variation | 1.4426 | 0.8230 | 3.8380 | 0.7895 |
-| Raw | 2.2699 | 1.5154 | 5.2868 | 1.5891 |
-
-В этом сценарии low-rank структура явно благоприятствует SSA/SVD. Это **не означает**, что SSA универсально лучший фильтр: он batch-oriented и значительно тяжелее EMA/Kalman. TV хорошо сохраняет ступень, но сам по себе не является outlier detector. `RobustAdaptiveKalman` — причинный online-фильтр, поэтому сравнивать его только по RMSE с offline SSA некорректно без учёта latency.
-
-Воспроизведение:
-
-```bash
-python tools/generate_recent_benchmark.py
-```
-
-CSV: [`recent_benchmark.csv`](https://github.com/Mika-dot/Noise-filters/blob/feature/recent-denoising-2026/docs/charts/recent_benchmark.csv).
+- [Research notes 2024–2026](https://github.com/Mika-dot/Noise-filters/blob/feature/recent-denoising-2026/docs/RESEARCH_2026.md)
+- [Benchmark CSV](https://github.com/Mika-dot/Noise-filters/blob/feature/recent-denoising-2026/docs/charts/recent_benchmark.csv)
 
 ---
 
-# Сравнение семейств
+# 4. `feature/adaptive-decomposition-2026` — adaptive VMD / entropy / NLMS
 
-| Семейство | Noise suppression | Выбросы | Сохранение фронта | Latency | CPU/RAM | Типичный выбор |
-|---|:---:|:---:|:---:|:---:|:---:|---|
-| Mean / Gaussian | ★★★ | ★ | ★★ | средняя | низкая | Общий шум |
-| EMA / RC | ★★★ | ★ | ★★ | низкая | **очень низкая** | MCU / real-time |
-| Median / Hampel | ★★ | **★★★★★** | ★★★ | окно | низкая-средняя | Impulse noise |
-| Savitzky–Golay | ★★★ | ★ | ★★★★ | окно | средняя | Форма пиков |
-| One Euro | ★★★ | ★★ | ★★★★ | **низкая** | низкая | Motion tracking |
-| Kalman | ★★★★ | ★★ | ★★★ | **низкая** | низкая | Модельный sensor tracking |
-| Robust adaptive Kalman | ★★★★ | ★★★★ | ★★★ | **низкая** | низкая | Нестационарный streaming noise |
-| Bilateral / TV | ★★★ | ★★ | **★★★★★** | средняя/высокая | средняя | Ступени и edges |
-| Wavelet | ★★★★ | ★★★ | ★★★★ | batch/block | средняя | Multiscale noise |
-| SSA / SVD | **★★★★★** при low-rank structure | ★★★ | ★★★★ | batch | **высокая** | Periodic/trend structure |
+Ветка: **[`feature/adaptive-decomposition-2026`](https://github.com/Mika-dot/Noise-filters/tree/feature/adaptive-decomposition-2026)**
+
+Это следующий слой исследования для **non-linear / non-stationary signals**, где фиксированное окно уже плохо описывает структуру данных.
+
+## Новые компоненты
+
+| API | Что делает | Ключевая особенность |
+|---|---|---|
+| `VariationalModeDecomposition` | Разлагает сигнал на band-limited modes | Возвращает modes + center frequencies + convergence diagnostics |
+| `AdaptiveVmdWaveletDenoise` | Автоматически ищет `K` и `α` | Score = reconstruction + entropy + mode overlap + complexity |
+| `AdaptiveVmdEntropyCorrelationDenoise` | Structure-aware reconstruction | `|corr| × (1 - permutation entropy)` для каждого IMF |
+| `PermutationEntropy` | Оценка сложности mode | Нормированная ordinal-pattern entropy `[0,1]` |
+| `NormalizedLmsNoiseCancel` | Adaptive noise cancellation | Использует отдельный correlated reference-noise channel |
+
+C# VMD сейчас специально использует **direct DFT/IDFT**: реализация читаемая и dependency-free, но это reference implementation, а не high-throughput FFT backend.
+
+## Двухрежимный benchmark
+
+Чтобы не подобрать один удобный dataset, используются два режима с seed `20260905`.
+
+### A. Structured / narrow-band interference
+
+Полезный сигнал: low-frequency component + chirp + step + short transients. Помехи: white noise + 31 Hz + 42 Hz + редкие impulses.
+
+| Method | RMSE | SNR, dB | Correlation |
+|---|---:|---:|---:|
+| Raw | 0.7629 | 2.95 | 0.8104 |
+| Moving average | 0.4105 | 8.33 | 0.9207 |
+| Median | 0.4813 | 6.95 | 0.8907 |
+| Savitzky–Golay | 0.2639 | 12.17 | 0.9679 |
+| Reweighted SVD | 0.7065 | 3.62 | 0.8236 |
+| **Adaptive VMD structure** | **0.2242** | **13.59** | **0.9778** |
+
+Auto-search выбрал `K=4`, `α=250`.
+
+### B. Broadband + impulsive noise
+
+| Method | RMSE | SNR, dB | Correlation |
+|---|---:|---:|---:|
+| Raw | 1.1901 | 0.41 | 0.7178 |
+| **Moving average** | **0.4456** | **8.94** | **0.9319** |
+| Median | 0.4850 | 8.20 | 0.9214 |
+| Savitzky–Golay | 0.5205 | 7.59 | 0.9176 |
+| Reweighted SVD | 0.6374 | 5.83 | 0.8724 |
+| Adaptive VMD structure | 0.6087 | 6.23 | 0.8949 |
+
+То есть adaptive VMD **не является универсально лучшим фильтром**: он особенно полезен при структурированных/узкополосных помехах, а для broadband noise локальные фильтры могут быть проще и точнее.
+
+![Adaptive VMD benchmark](https://raw.githubusercontent.com/Mika-dot/Noise-filters/feature/adaptive-decomposition-2026/docs/charts/adaptive_vmd_benchmark.svg)
+
+- [Полное описание исследования](https://github.com/Mika-dot/Noise-filters/blob/feature/adaptive-decomposition-2026/docs/ADAPTIVE_DECOMPOSITION_2026.md)
+- [Benchmark CSV](https://github.com/Mika-dot/Noise-filters/blob/feature/adaptive-decomposition-2026/docs/charts/adaptive_vmd_benchmark.csv)
+- [Benchmark generator](https://github.com/Mika-dot/Noise-filters/blob/feature/adaptive-decomposition-2026/tools/generate_adaptive_vmd_benchmark.py)
+
+## Свежая исследовательская база
+
+Новая ветка ориентируется на архитектурные идеи современных работ, но реализации написаны независимо и не заявлены как verbatim reproduction:
+
+- Sensors 2026 — Parameter-Adaptive VMD + Wavelet Thresholding, DOI `10.3390/s26133974`;
+- Signal Processing 2026 — Adaptive Successive VMD, DOI `10.1016/j.sigpro.2025.110368`;
+- Sensors 2026 — ICFO–SVMD + improved wavelet thresholding, DOI `10.3390/s26020750`;
+- Structural Durability & Health Monitoring 2025 — adaptive VMD + WT, DOI `10.32604/sdhm.2025.061805`;
+- Remote Sensing 2025 — adaptive VMD + MSPCA, DOI `10.3390/rs17030525`;
+- Electronics 2025 — VMD + NLMS, DOI `10.3390/electronics14244914`.
 
 ---
 
-# Сборка
+# API / сборка
 
-Для практической библиотеки рекомендуется advanced или recent branch:
+Практическая библиотека и исследовательские ветки сохраняют `.NET Standard 2.0` для основного проекта.
 
 ```bash
-git clone https://github.com/Mika-dot/Noise-filters.git
-cd Noise-filters
-git switch feature/recent-denoising-2026
-
 dotnet build Filters/Filters/Filters.csproj -c Release
-dotnet run --project Tests/NoiseFilters.Tests/NoiseFilters.Tests.csproj -c Release
 ```
 
-Пример API:
+Пример advanced API:
 
 ```csharp
 using Filters;
 
-double[] measurements = { 10, 11, 10, 58, 12, 11, 12, 13, 12 };
+double[] measurements = { 10, 11, 10, 58, 12, 11, 12, 13 };
 
-double[] spikesRemoved = RobustFilters.Hampel(measurements, window: 7, threshold: 3.0);
+double[] robust = RobustFilters.Hampel(measurements, window: 7, threshold: 3.0);
 double[] smooth = SignalFilters.SavitzkyGolay(measurements, window: 7, polynomialOrder: 3);
-double[] online = ModernDenoisingFilters.RobustAdaptiveKalman(measurements);
-double[] lowRank = ModernDenoisingFilters.ReweightedSvdDenoise(measurements, window: 4);
+double[] tracking = ModernDenoisingFilters.RobustAdaptiveKalman(measurements);
 ```
 
----
+Adaptive-decomposition branch:
 
-# Куда продолжать исследование
+```csharp
+AdaptiveVmdResult result = StructureAwareVmdFilters.AdaptiveVmdEntropyCorrelationDenoise(
+    measurements,
+    maxModes: 6);
 
-Следующие логичные ветки:
+double[] filtered = result.Signal;
 
-1. **Adaptive VMD + wavelet threshold** — особенно после работ 2026 года по vibration signals.
-2. **Автовыбор SSA rank** по second-order difference spectrum singular values вместо ручного `rank`.
-3. **Online / block SSA** с ограниченной задержкой и памятью.
-4. **Daubechies / Symlet wavelets** без runtime-зависимостей.
-5. **Time-varying IIR**: коэффициенты фильтра меняются под текущий спектр шума; нейросеть здесь опциональна, сначала стоит исследовать полностью детерминированный selector.
-6. Единый benchmark harness, который прогоняет **все ветки на одном наборе сигналов**: Gaussian, impulse, drift, step, chirp, random walk, colored noise и mixed noise.
-
----
-
-## Структура
-
-```text
-main
-├── Filters/Filters/filtration.cs        # historical baseline
-├── Filter in charts/                    # original plots
-└── README.md                            # this cross-branch index
-
-feature/advanced-noise-filters
-├── Filters/Filters/BasicFilters.cs
-├── Filters/Filters/RobustFilters.cs
-├── Filters/Filters/SignalFilters.cs
-├── Filters/Filters/StateEstimationFilters.cs
-├── Tests/
-├── Examples/
-├── docs/
-└── tools/
-
-feature/recent-denoising-2026
-├── ...advanced branch...
-├── Filters/Filters/ModernDenoisingFilters.cs
-├── docs/RESEARCH_2026.md
-├── docs/charts/recent_benchmark.{csv,svg}
-└── tools/generate_recent_benchmark.py
+for (int k = 0; k < result.ModeCount; k++)
+{
+    Console.WriteLine($"mode={k} " +
+        $"f={result.Decomposition.CenterFrequencies[k]:F4} " +
+        $"PE={result.PermutationEntropies[k]:F3} " +
+        $"corr={result.Correlations[k]:F3}");
+}
 ```
 
-Цель репозитория — не выбрать один «лучший фильтр», а показать **какой алгоритм выигрывает при конкретной структуре сигнала, шуме, ограничении по latency и вычислительному бюджету**.
+# Тестирование и reproducibility
+
+В новых ветках используются:
+
+- GitHub Actions;
+- dependency-free C# tests;
+- отдельный adaptive-VMD smoke test;
+- Python reference simulations;
+- фиксированные random seeds;
+- CSV рядом с графиками;
+- generators для воспроизведения benchmark assets.
+
+# Roadmap
+
+Следующие логичные шаги исследования:
+
+1. заменить reference DFT в VMD на FFT backend без изменения public API;
+2. mirror extension и boundary-artifact metrics;
+3. Successive VMD / SVMD;
+4. multiscale permutation entropy;
+5. automatic `tau` / stopping criteria;
+6. explicit mode-mixing detection и mode merge/split;
+7. VMD → NLMS cascade для реального reference-noise channel;
+8. multichannel PCA/MSSA branch;
+9. BenchmarkDotNet для C# throughput/allocation;
+10. реальные datasets: IMU, bearing/gear vibration, ECG/PPG, acoustic, industrial sensors;
+11. Pareto chart `quality ↔ latency ↔ memory` вместо рейтинга только по RMSE.
+
+## Главное правило репозитория
+
+**Нет универсально лучшего noise filter.** Нужный алгоритм определяется типом шума, структурой полезного сигнала, допустимой задержкой, доступностью модели процесса и вычислительным бюджетом. Поэтому ветки сохраняют не только «лучшие» результаты, но и сценарии, где новый метод проигрывает более простому.
