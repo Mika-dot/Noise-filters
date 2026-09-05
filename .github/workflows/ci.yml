@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, feature/advanced-noise-filters]
+    branches: [main, feature/advanced-noise-filters, feature/recent-denoising-2026]
   pull_request:
 
 jobs:
@@ -28,5 +28,5 @@ jobs:
         run: pip install -r tools/requirements.txt
       - name: Test reference simulations
         run: python tests/test_benchmarks.py
-      - name: Validate chart generator
-        run: python -m py_compile tools/generate_benchmarks.py tools/generate_charts.py
+      - name: Validate chart generators
+        run: python -m py_compile tools/generate_benchmarks.py tools/generate_charts.py tools/generate_recent_benchmark.py
