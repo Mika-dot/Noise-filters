@@ -17,6 +17,8 @@ jobs:
         run: dotnet build Filters/Filters/Filters.csproj --configuration Release
       - name: Run dependency-free tests
         run: dotnet run --project Tests/NoiseFilters.Tests/NoiseFilters.Tests.csproj --configuration Release
+      - name: Run adaptive VMD smoke test
+        run: dotnet run --project Tests/AdaptiveVmdSmoke/AdaptiveVmdSmoke.csproj --configuration Release
       - name: Run example
         run: dotnet run --project Examples/ConsoleDemo/ConsoleDemo.csproj --configuration Release
       - uses: actions/setup-python@v5
