@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560">
+<rect width="100%" height="100%" fill="white"/>
+<style>text{font-family:Arial,sans-serif;fill:#111}.title{font-size:24px;font-weight:700}.sub{font-size:18px;font-weight:700}.axis{font-size:13px}.val{font-size:12px}.bar{fill:#666}.best{fill:#222}</style>
+<text x="600.0" y="32" text-anchor="middle" class="title">Adaptive VMD benchmark — two noise regimes</text>
+<text x="330.0" y="80" text-anchor="middle" class="sub">structured interference</text>
+<line x1="70" y1="465" x2="590" y2="465" stroke="#222"/>
+<line x1="70" y1="105" x2="70" y2="465" stroke="#222"/>
+<line x1="70" y1="465.0" x2="590" y2="465.0" stroke="#ddd"/>
+<text x="62" y="469.0" text-anchor="end" class="axis">0.00</text>
+<line x1="70" y1="375.0" x2="590" y2="375.0" stroke="#ddd"/>
+<text x="62" y="379.0" text-anchor="end" class="axis">0.22</text>
+<line x1="70" y1="285.0" x2="590" y2="285.0" stroke="#ddd"/>
+<text x="62" y="289.0" text-anchor="end" class="axis">0.44</text>
+<line x1="70" y1="195.0" x2="590" y2="195.0" stroke="#ddd"/>
+<text x="62" y="199.0" text-anchor="end" class="axis">0.66</text>
+<line x1="70" y1="105.0" x2="590" y2="105.0" stroke="#ddd"/>
+<text x="62" y="109.0" text-anchor="end" class="axis">0.88</text>
+<rect x="88.2" y="152.0" width="50.3" height="313.0" class="bar"/>
+<text x="113.3" y="147.0" text-anchor="middle" class="val">0.763</text>
+<text x="113.3" y="483" text-anchor="middle" class="axis">Raw</text>
+<rect x="174.9" y="296.6" width="50.3" height="168.4" class="bar"/>
+<text x="200.0" y="291.6" text-anchor="middle" class="val">0.410</text>
+<text x="200.0" y="483" text-anchor="middle" class="axis">MA</text>
+<rect x="261.5" y="267.5" width="50.3" height="197.5" class="bar"/>
+<text x="286.7" y="262.5" text-anchor="middle" class="val">0.481</text>
+<text x="286.7" y="483" text-anchor="middle" class="axis">Median</text>
+<rect x="348.2" y="356.7" width="50.3" height="108.3" class="bar"/>
+<text x="373.3" y="351.7" text-anchor="middle" class="val">0.264</text>
+<text x="373.3" y="483" text-anchor="middle" class="axis">S-G</text>
+<rect x="434.9" y="175.1" width="50.3" height="289.9" class="bar"/>
+<text x="460.0" y="170.1" text-anchor="middle" class="val">0.706</text>
+<text x="460.0" y="483" text-anchor="middle" class="axis">rSVD</text>
+<rect x="521.5" y="373.0" width="50.3" height="92.0" class="best"/>
+<text x="546.7" y="368.0" text-anchor="middle" class="val">0.224</text>
+<text x="546.7" y="483" text-anchor="middle" class="axis">Adaptive VMD</text>
+<text x="22" y="285.0" transform="rotate(-90 22 285.0)" text-anchor="middle" class="axis">RMSE (lower is better)</text>
+<text x="910.0" y="80" text-anchor="middle" class="sub">broadband impulsive</text>
+<line x1="650" y1="465" x2="1170" y2="465" stroke="#222"/>
+<line x1="650" y1="105" x2="650" y2="465" stroke="#222"/>
+<line x1="650" y1="465.0" x2="1170" y2="465.0" stroke="#ddd"/>
+<text x="642" y="469.0" text-anchor="end" class="axis">0.00</text>
+<line x1="650" y1="375.0" x2="1170" y2="375.0" stroke="#ddd"/>
+<text x="642" y="379.0" text-anchor="end" class="axis">0.34</text>
+<line x1="650" y1="285.0" x2="1170" y2="285.0" stroke="#ddd"/>
+<text x="642" y="289.0" text-anchor="end" class="axis">0.68</text>
+<line x1="650" y1="195.0" x2="1170" y2="195.0" stroke="#ddd"/>
+<text x="642" y="199.0" text-anchor="end" class="axis">1.03</text>
+<line x1="650" y1="105.0" x2="1170" y2="105.0" stroke="#ddd"/>
+<text x="642" y="109.0" text-anchor="end" class="axis">1.37</text>
+<rect x="668.2" y="152.0" width="50.3" height="313.0" class="bar"/>
+<text x="693.3" y="147.0" text-anchor="middle" class="val">1.190</text>
+<text x="693.3" y="483" text-anchor="middle" class="axis">Raw</text>
+<rect x="754.9" y="347.8" width="50.3" height="117.2" class="best"/>
+<text x="780.0" y="342.8" text-anchor="middle" class="val">0.446</text>
+<text x="780.0" y="483" text-anchor="middle" class="axis">MA</text>
+<rect x="841.5" y="337.4" width="50.3" height="127.6" class="bar"/>
+<text x="866.7" y="332.4" text-anchor="middle" class="val">0.485</text>
+<text x="866.7" y="483" text-anchor="middle" class="axis">Median</text>
+<rect x="928.2" y="328.1" width="50.3" height="136.9" class="bar"/>
+<text x="953.3" y="323.1" text-anchor="middle" class="val">0.520</text>
+<text x="953.3" y="483" text-anchor="middle" class="axis">S-G</text>
+<rect x="1014.9" y="297.4" width="50.3" height="167.6" class="bar"/>
+<text x="1040.0" y="292.4" text-anchor="middle" class="val">0.637</text>
+<text x="1040.0" y="483" text-anchor="middle" class="axis">rSVD</text>
+<rect x="1101.5" y="304.9" width="50.3" height="160.1" class="bar"/>
+<text x="1126.7" y="299.9" text-anchor="middle" class="val">0.609</text>
+<text x="1126.7" y="483" text-anchor="middle" class="axis">Adaptive VMD</text>
+<text x="602" y="285.0" transform="rotate(-90 602 285.0)" text-anchor="middle" class="axis">RMSE (lower is better)</text>
+<text x="600" y="540" text-anchor="middle" class="axis">Seed 20260905 · same clean target per scenario · dark bar = lowest RMSE</text>
+</svg>
